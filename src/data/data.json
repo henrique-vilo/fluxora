@@ -1,0 +1,122 @@
+[
+{
+"id": 1,
+"code": "RM-001",
+"material": "Steel sheet",
+"category": "Metals",
+"unit": "kg",
+"availableQuantity": 150,
+"minimumStock": 200,
+"status": "Low stock"
+},
+{
+"id": 2,
+"code": "RM-002",
+"material": "Aluminum bar",
+"category": "Metals",
+"unit": "kg",
+"availableQuantity": 320,
+"minimumStock": 250,
+"status": "Normal"
+},
+{
+"id": 3,
+"code": "RM-003",
+"material": "Copper wire",
+"category": "Metals",
+"unit": "kg",
+"availableQuantity": 0,
+"minimumStock": 100,
+"status": "Out of stock"
+},
+{
+"id": 4,
+"code": "RM-004",
+"material": "Galvanized steel pipe",
+"category": "Metals",
+"unit": "m",
+"availableQuantity": 85,
+"minimumStock": 120,
+"status": "Low stock"
+},
+{
+"id": 5,
+"code": "RM-005",
+"material": "Epoxy resin",
+"category": "Chemicals",
+"unit": "L",
+"availableQuantity": 180,
+"minimumStock": 150,
+"status": "Normal"
+},
+{
+"id": 6,
+"code": "RM-006",
+"material": "Industrial adhesive",
+"category": "Chemicals",
+"unit": "L",
+"availableQuantity": 45,
+"minimumStock": 80,
+"status": "Low stock"
+},
+{
+"id": 7,
+"code": "RM-007",
+"material": "Industrial solvent",
+"category": "Chemicals",
+"unit": "L",
+"availableQuantity": 0,
+"minimumStock": 60,
+"status": "Out of stock"
+},
+{
+"id": 8,
+"code": "RM-008",
+"material": "Synthetic rubber",
+"category": "Polymers",
+"unit": "kg",
+"availableQuantity": 210,
+"minimumStock": 180,
+"status": "Normal"
+},
+{
+"id": 9,
+"code": "RM-009",
+"material": "Granulated polyethylene",
+"category": "Polymers",
+"unit": "kg",
+"availableQuantity": 90,
+"minimumStock": 150,
+"status": "Low stock"
+},
+{
+"id": 10,
+"code": "RM-010",
+"material": "Granulated polypropylene",
+"category": "Polymers",
+"unit": "kg",
+"availableQuantity": 0,
+"minimumStock": 120,
+"status": "Out of stock"
+},
+{
+"id": 11,
+"code": "RM-011",
+"material": "Plywood",
+"category": "Structural materials",
+"unit": "m²",
+"availableQuantity": 275,
+"minimumStock": 200,
+"status": "Normal"
+},
+{
+"id": 12,
+"code": "RM-012",
+"material": "MDF panel",
+"category": "Structural materials",
+"unit": "m²",
+"availableQuantity": 70,
+"minimumStock": 100,
+"status": "Low stock"
+}
+]
