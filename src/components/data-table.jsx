@@ -66,6 +66,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -86,8 +87,8 @@ import {
 } from "@/components/ui/tabs"
 import { GripVerticalIcon, CircleCheckIcon, LoaderIcon, EllipsisVerticalIcon, Columns3Icon, ChevronDownIcon, PlusIcon, ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon, TrendingUpIcon } from "lucide-react"
 
-// New in v9: declare the features this table uses — anything you don't
-// register is tree-shaken out of the bundle.
+import dados from "@/data/data.json";
+
 const features = tableFeatures({
   columnFilteringFeature,
   columnVisibilityFeature,
@@ -332,17 +333,66 @@ export function DataTable({
     pageIndex: 0,
     pageSize: 10,
   })
+  const [search, setSearch] = React.useState("")
+  const [categoryFilter, setCategoryFilter] = React.useState("all")
+  const [statusFilter, setStatusFilter] = React.useState("all")
+  const [filteredData, setFilteredData] = React.useState(initialData)
   const sortableId = React.useId()
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {})
   )
-  const dataIds = React.useMemo(() => data?.map(({ id }) => id) || [], [data])
+
+  React.useEffect(() => {
+    const normalizedSearch = search.trim().toLowerCase()
+
+    const result = data.filter((item) => {
+      const matchesSearch =
+        normalizedSearch === "" ||
+        String(item.id).toLowerCase().includes(normalizedSearch) ||
+        item.code.toLowerCase().includes(normalizedSearch) ||
+        item.material.toLowerCase().includes(normalizedSearch) ||
+        item.category.toLowerCase().includes(normalizedSearch) ||
+        item.unit.toLowerCase().includes(normalizedSearch) ||
+        item.status.toLowerCase().includes(normalizedSearch)
+
+      const matchesCategory =
+        categoryFilter === "all" ||
+        item.category === categoryFilter
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        item.status === statusFilter
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesStatus
+      )
+    })
+
+    setFilteredData(result)
+
+
+    setPagination((current) => ({
+      ...current,
+      pageIndex: 0,
+    }))
+  }, [data, search, categoryFilter, statusFilter])
+
+  const dataIds = React.useMemo(
+    () => filteredData?.map(({ id }) => id) || [],
+    [filteredData]
+  )
+
   const table = useTable({
     features,
-    data,
+
+    data: filteredData,
+
     columns,
+
     state: {
       sorting,
       columnVisibility,
@@ -350,40 +400,97 @@ export function DataTable({
       columnFilters,
       pagination,
     },
+
     getRowId: (row) => row.id.toString(),
+
     enableRowSelection: true,
+
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
   })
+
   function handleDragEnd(event) {
     const { active, over } = event
+
     if (active && over && active.id !== over.id) {
-      setData((data) => {
-        const oldIndex = dataIds.indexOf(active.id)
-        const newIndex = dataIds.indexOf(over.id)
-        return arrayMove(data, oldIndex, newIndex)
+      setData((currentData) => {
+        const oldIndex = currentData.findIndex(
+          (item) => item.id.toString() === active.id.toString()
+        )
+
+        const newIndex = currentData.findIndex(
+          (item) => item.id.toString() === over.id.toString()
+        )
+
+        if (oldIndex === -1 || newIndex === -1) {
+          return currentData
+        }
+
+        return arrayMove(
+          currentData,
+          oldIndex,
+          newIndex
+        )
       })
     }
   }
+
+  const categories = [
+    ...new Set(data.map((item) => item.category))
+  ]
+
+  const statuses = [
+    ...new Set(data.map((item) => item.status))
+  ]
+
+
+  function clearFilters() {
+    setSearch("")
+    setCategoryFilter("all")
+    setStatusFilter("all")
+
+    setPagination((current) => ({
+      ...current,
+      pageIndex: 0,
+    }))
+  }
+
   return (
     <Tabs
       defaultValue="outline"
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
+
+        <Label
+          htmlFor="view-selector"
+          className="sr-only"
+        >
           View
         </Label>
+
         <Select
           defaultValue="outline"
           items={[
-            { label: "Outline", value: "outline" },
-            { label: "Past Performance", value: "past-performance" },
-            { label: "Key Personnel", value: "key-personnel" },
-            { label: "Focus Documents", value: "focus-documents" },
+            {
+              label: "Outline",
+              value: "outline",
+            },
+            {
+              label: "Past Performance",
+              value: "past-performance",
+            },
+            {
+              label: "Key Personnel",
+              value: "key-personnel",
+            },
+            {
+              label: "Focus Documents",
+              value: "focus-documents",
+            },
           ]}
         >
           <SelectTrigger
@@ -393,40 +500,143 @@ export function DataTable({
           >
             <SelectValue placeholder="Select a view" />
           </SelectTrigger>
+
           <SelectContent>
             <SelectGroup>
-              <SelectItem value="outline">Outline</SelectItem>
-              <SelectItem value="past-performance">Past Performance</SelectItem>
-              <SelectItem value="key-personnel">Key Personnel</SelectItem>
-              <SelectItem value="focus-documents">Focus Documents</SelectItem>
+              <SelectItem value="outline">
+                Outline
+              </SelectItem>
+
+              <SelectItem value="past-performance">
+                Past Performance
+              </SelectItem>
+
+              <SelectItem value="key-personnel">
+                Key Personnel
+              </SelectItem>
+
+              <SelectItem value="focus-documents">
+                Focus Documents
+              </SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
+
         <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance">
-            Past Performance <Badge variant="secondary">3</Badge>
+          <TabsTrigger value="outline">
+            Materials Management
           </TabsTrigger>
-          <TabsTrigger value="key-personnel">
-            Key Personnel <Badge variant="secondary">2</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
         </TabsList>
         <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search materials..."
+            value={search}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
+            className="w-full max-w-56"
+          />
+          <Select
+            value={categoryFilter}
+            onValueChange={(value) =>
+              setCategoryFilter(value)
+            }
+          >
+            <SelectTrigger className="w-full max-w-48">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>
+                  Category
+                </SelectLabel>
+
+                <SelectItem value="all">
+                  All categories
+                </SelectItem>
+
+                {categories.map((category) => (
+                  <SelectItem
+                    key={category}
+                    value={category}
+                  >
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={statusFilter}
+            onValueChange={(value) =>
+              setStatusFilter(value)
+            }
+          >
+            <SelectTrigger className="w-full max-w-48">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>
+                  Status
+                </SelectLabel>
+
+                <SelectItem value="all">
+                  All statuses
+                </SelectItem>
+
+                {statuses.map((status) => (
+                  <SelectItem
+                    key={status}
+                    value={status}
+                  >
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearFilters}
+            disabled={
+              search === "" &&
+              categoryFilter === "all" &&
+              statusFilter === "all"
+            }
+          >
+            Clear filters
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger
-              render={<Button variant="outline" size="sm" />}
+              render={
+                <Button
+                  variant="outline"
+                  size="sm"
+                />
+              }
             >
               <Columns3Icon data-icon="inline-start" />
               Columns
               <ChevronDownIcon data-icon="inline-end" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
+
+            <DropdownMenuContent
+              align="end"
+              className="w-32"
+            >
               {table
                 .getAllColumns()
                 .filter(
                   (column) =>
-                    typeof column.accessorFn !== "undefined" &&
+                    typeof column.accessorFn !==
+                      "undefined" &&
                     column.getCanHide()
                 )
                 .map((column) => {
@@ -436,7 +646,9 @@ export function DataTable({
                       className="capitalize"
                       checked={column.getIsVisible()}
                       onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
+                        column.toggleVisibility(
+                          !!value
+                        )
                       }
                     >
                       {column.id}
@@ -445,13 +657,9 @@ export function DataTable({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <PlusIcon
-            />
-            <span className="hidden lg:inline">Add Section</span>
-          </Button>
         </div>
       </div>
+
       <TabsContent
         value="outline"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
@@ -466,29 +674,49 @@ export function DataTable({
           >
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-muted">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder ? null : (
-                            <FlexRender header={header} />
-                          )}
-                        </TableHead>
-                      )
-                    })}
-                  </TableRow>
-                ))}
+                {table.getHeaderGroups().map(
+                  (headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map(
+                        (header) => {
+                          return (
+                            <TableHead
+                              key={header.id}
+                              colSpan={header.colSpan}
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : (
+                                  <FlexRender
+                                    header={header}
+                                  />
+                                )}
+                            </TableHead>
+                          )
+                        }
+                      )}
+                    </TableRow>
+                  )
+                )}
               </TableHeader>
+
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
                 {table.getRowModel().rows?.length ? (
                   <SortableContext
                     items={dataIds}
-                    strategy={verticalListSortingStrategy}
+                    strategy={
+                      verticalListSortingStrategy
+                    }
                   >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
+                    {table
+                      .getRowModel()
+                      .rows
+                      .map((row) => (
+                        <DraggableRow
+                          key={row.id}
+                          row={row}
+                        />
+                      ))}
                   </SortableContext>
                 ) : (
                   <TableRow>
@@ -504,347 +732,177 @@ export function DataTable({
             </Table>
           </DndContext>
         </div>
+
+        {/* PAGINAÇÃO */}
         <div className="flex items-center justify-between px-4">
+
           <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
+            {table.getFilteredSelectedRowModel().rows.length}{" "}
+            of{" "}
+            {table.getFilteredRowModel().rows.length}{" "}
+            row(s) selected.
           </div>
+
           <div className="flex w-full items-center gap-8 lg:w-fit">
+
             <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
+              <Label
+                htmlFor="rows-per-page"
+                className="text-sm font-medium"
+              >
                 Rows per page
               </Label>
+
               <Select
                 value={`${table.state.pagination.pageSize}`}
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value))
+                  table.setPageSize(
+                    Number(value)
+                  )
                 }}
-                items={[10, 20, 30, 40, 50].map((pageSize) => ({
-                  label: `${pageSize}`,
-                  value: `${pageSize}`,
-                }))}
+                items={[10, 20, 30, 40, 50].map(
+                  (pageSize) => ({
+                    label: `${pageSize}`,
+                    value: `${pageSize}`,
+                  })
+                )}
               >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue placeholder={table.state.pagination.pageSize} />
+                <SelectTrigger
+                  size="sm"
+                  className="w-20"
+                  id="rows-per-page"
+                >
+                  <SelectValue
+                    placeholder={
+                      table.state.pagination.pageSize
+                    }
+                  />
                 </SelectTrigger>
+
                 <SelectContent side="top">
                   <SelectGroup>
-                    {[10, 20, 30, 40, 50].map((pageSize) => (
-                      <SelectItem key={pageSize} value={`${pageSize}`}>
-                        {pageSize}
-                      </SelectItem>
-                    ))}
+                    {[10, 20, 30, 40, 50].map(
+                      (pageSize) => (
+                        <SelectItem
+                          key={pageSize}
+                          value={`${pageSize}`}
+                        >
+                          {pageSize}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
+
             <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.state.pagination.pageIndex + 1} of{" "}
+              Page{" "}
+              {table.state.pagination.pageIndex + 1}{" "}
+              of{" "}
               {table.getPageCount()}
             </div>
+
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
+
               <Button
                 variant="outline"
                 className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() =>
+                  table.setPageIndex(0)
+                }
+                disabled={
+                  !table.getCanPreviousPage()
+                }
               >
-                <span className="sr-only">Go to first page</span>
-                <ChevronsLeftIcon
-                />
+                <span className="sr-only">
+                  Go to first page
+                </span>
+
+                <ChevronsLeftIcon />
               </Button>
+
               <Button
                 variant="outline"
                 className="size-8"
                 size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() =>
+                  table.previousPage()
+                }
+                disabled={
+                  !table.getCanPreviousPage()
+                }
               >
-                <span className="sr-only">Go to previous page</span>
-                <ChevronLeftIcon
-                />
+                <span className="sr-only">
+                  Go to previous page
+                </span>
+
+                <ChevronLeftIcon />
               </Button>
+
               <Button
                 variant="outline"
                 className="size-8"
                 size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() =>
+                  table.nextPage()
+                }
+                disabled={
+                  !table.getCanNextPage()
+                }
               >
-                <span className="sr-only">Go to next page</span>
-                <ChevronRightIcon
-                />
+                <span className="sr-only">
+                  Go to next page
+                </span>
+
+                <ChevronRightIcon />
               </Button>
+
               <Button
                 variant="outline"
                 className="hidden size-8 lg:flex"
                 size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
+                onClick={() =>
+                  table.setPageIndex(
+                    table.getPageCount() - 1
+                  )
+                }
+                disabled={
+                  !table.getCanNextPage()
+                }
               >
-                <span className="sr-only">Go to last page</span>
-                <ChevronsRightIcon
-                />
+                <span className="sr-only">
+                  Go to last page
+                </span>
+
+                <ChevronsRightIcon />
               </Button>
+
             </div>
           </div>
         </div>
       </TabsContent>
+
       <TabsContent
         value="past-performance"
         className="flex flex-col px-4 lg:px-6"
       >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed" />
       </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+
+      <TabsContent
+        value="key-personnel"
+        className="flex flex-col px-4 lg:px-6"
+      >
+        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed" />
       </TabsContent>
+
       <TabsContent
         value="focus-documents"
         className="flex flex-col px-4 lg:px-6"
       >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed" />
       </TabsContent>
     </Tabs>
-  )
-}
-const chartData = [
-  {
-    month: "January",
-    desktop: 186,
-    mobile: 80,
-  },
-  {
-    month: "February",
-    desktop: 305,
-    mobile: 200,
-  },
-  {
-    month: "March",
-    desktop: 237,
-    mobile: 120,
-  },
-  {
-    month: "April",
-    desktop: 73,
-    mobile: 190,
-  },
-  {
-    month: "May",
-    desktop: 209,
-    mobile: 130,
-  },
-  {
-    month: "June",
-    desktop: 214,
-    mobile: 140,
-  },
-]
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--primary)",
-  },
-
-  mobile: {
-    label: "Mobile",
-    color: "var(--primary)",
-  }
-}
-function TableCellViewer({
-  item
-}) {
-  const isMobile = useIsMobile()
-  return (
-    <Drawer swipeDirection={isMobile ? "down" : "right"}>
-      <DrawerTrigger
-        render={
-          <Button
-            variant="link"
-            className="w-fit px-0 text-left text-foreground"
-          />
-        }
-      >
-        {item.header}
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.header}</DrawerTitle>
-          <DrawerDescription>
-            Showing total visitors for the last 6 months
-          </DrawerDescription>
-        </DrawerHeader>
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          {!isMobile && (
-            <>
-              <ChartContainer config={chartConfig}>
-                <AreaChart
-                  accessibilityLayer
-                  data={chartData}
-                  margin={{
-                    left: 0,
-                    right: 10,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
-                    hide
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
-                  <Area
-                    dataKey="mobile"
-                    type="natural"
-                    fill="var(--color-mobile)"
-                    fillOpacity={0.6}
-                    stroke="var(--color-mobile)"
-                    stackId="a"
-                  />
-                  <Area
-                    dataKey="desktop"
-                    type="natural"
-                    fill="var(--color-desktop)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-desktop)"
-                    stackId="a"
-                  />
-                </AreaChart>
-              </ChartContainer>
-              <Separator />
-              <div className="grid gap-2">
-                <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
-                  <TrendingUpIcon className="size-4" />
-                </div>
-                <div className="text-muted-foreground">
-                  Showing total visitors for the last 6 months. This is just
-                  some random text to test the layout. It spans multiple lines
-                  and should wrap around.
-                </div>
-              </div>
-              <Separator />
-            </>
-          )}
-          <form className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="header">Header</Label>
-              <Input id="header" defaultValue={item.header} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="type">Type</Label>
-                <Select
-                  defaultValue={item.type}
-                  items={[
-                    { label: "Table of Contents", value: "Table of Contents" },
-                    { label: "Executive Summary", value: "Executive Summary" },
-                    {
-                      label: "Technical Approach",
-                      value: "Technical Approach",
-                    },
-                    { label: "Design", value: "Design" },
-                    { label: "Capabilities", value: "Capabilities" },
-                    { label: "Focus Documents", value: "Focus Documents" },
-                    { label: "Narrative", value: "Narrative" },
-                    { label: "Cover Page", value: "Cover Page" },
-                  ]}
-                >
-                  <SelectTrigger id="type" className="w-full">
-                    <SelectValue placeholder="Select a type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="Table of Contents">
-                        Table of Contents
-                      </SelectItem>
-                      <SelectItem value="Executive Summary">
-                        Executive Summary
-                      </SelectItem>
-                      <SelectItem value="Technical Approach">
-                        Technical Approach
-                      </SelectItem>
-                      <SelectItem value="Design">Design</SelectItem>
-                      <SelectItem value="Capabilities">Capabilities</SelectItem>
-                      <SelectItem value="Focus Documents">
-                        Focus Documents
-                      </SelectItem>
-                      <SelectItem value="Narrative">Narrative</SelectItem>
-                      <SelectItem value="Cover Page">Cover Page</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  defaultValue={item.status}
-                  items={[
-                    { label: "Done", value: "Done" },
-                    { label: "In Progress", value: "In Progress" },
-                    { label: "Not Started", value: "Not Started" },
-                  ]}
-                >
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="Done">Done</SelectItem>
-                      <SelectItem value="In Progress">In Progress</SelectItem>
-                      <SelectItem value="Not Started">Not Started</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="target">Target</Label>
-                <Input id="target" defaultValue={item.target} />
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="limit">Limit</Label>
-                <Input id="limit" defaultValue={item.limit} />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="reviewer">Reviewer</Label>
-              <Select
-                defaultValue={item.reviewer}
-                items={[
-                  { label: "Eddie Lake", value: "Eddie Lake" },
-                  { label: "Jamik Tashpulatov", value: "Jamik Tashpulatov" },
-                  { label: "Emily Whalen", value: "Emily Whalen" },
-                ]}
-              >
-                <SelectTrigger id="reviewer" className="w-full">
-                  <SelectValue placeholder="Select a reviewer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-                    <SelectItem value="Jamik Tashpulatov">
-                      Jamik Tashpulatov
-                    </SelectItem>
-                    <SelectItem value="Emily Whalen">Emily Whalen</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </form>
-        </div>
-        <DrawerFooter>
-          <Button>Submit</Button>
-          <DrawerClose render={<Button variant="outline" />}>Done</DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
   )
 }

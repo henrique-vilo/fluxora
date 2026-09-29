@@ -42,16 +42,16 @@ export default function Home() {
                   <div className="pt-10">
                     <AvatarGroup className="grayscale">
                       <Avatar>
-                        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                        <AvatarImage src="https://github.com/henrique-vilo.png" alt="@shadcn" />
                         <AvatarFallback>CN</AvatarFallback>
                       </Avatar>
                       <Avatar>
-                        <AvatarImage src="https://github.com/maxleiter.png" alt="@maxleiter" />
+                        <AvatarImage src="https://github.com/paivs.png" alt="@maxleiter" />
                         <AvatarFallback>LR</AvatarFallback>
                       </Avatar>
                       <Avatar>
                         <AvatarImage
-                          src="https://github.com/evilrabbit.png"
+                          src="https://github.com/vianavianoso.png"
                           alt="@evilrabbit"
                         />
                         <AvatarFallback>ER</AvatarFallback>

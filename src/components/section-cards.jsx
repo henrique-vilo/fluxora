@@ -31,7 +31,7 @@ export function SectionCards() {
           </CardTitle>
       </Card>
       <Card className="@container/card flex justify-center items-center">
-          <CardDescription className="text-4xl">Normal Stock</CardDescription>
+          <CardDescription className="text-4xl">Regular Stock</CardDescription>
           <CardTitle className="text-5xl font-semibold tabular-nums @[250px]/card:text-4xl">
             {estoqueNormal.length}
           </CardTitle>
@@ -43,7 +43,7 @@ export function SectionCards() {
           </CardTitle>
       </Card>
       <Card className="@container/card flex justify-center items-center">
-          <CardDescription className="text-4xl">No Stock</CardDescription>
+          <CardDescription className="text-4xl">Out of Stock</CardDescription>
           <CardTitle className="text-5xl font-semibold tabular-nums @[250px]/card:text-4xl">
             {semEstoque.length}
           </CardTitle>

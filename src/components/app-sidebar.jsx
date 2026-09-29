@@ -19,9 +19,9 @@ import { LayoutDashboardIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, Cam
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Admin User",
+    email: "admin@demo.com",
+    avatar: "favicon.ico",
   },
   navMain: [
     {
@@ -188,7 +188,7 @@ export function AppSidebar({
               render={<a href="#" />
               }
             >
-              <img className="size-5!" src="@/app/favicon.ico"/>
+              <img className="size-5!" src="favicon.ico"/>
               <span className="text-base font-semibold">Fluxora</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
